@@ -11,11 +11,8 @@ __license__ = "MIT"
 import os
 import cmd
 import sys
-import glob
 import textwrap
-import importlib
 from pathlib import Path
-from collections import namedtuple
 
 from utils.base.base_sheepl_class import Sheepl
 
@@ -47,12 +44,12 @@ class SheeplConsole(MainConsole):
     Creates a person object
     """
 
-    def __init__(self, context, cl, tasks):
+    def __init__(self, context, cl, tasks, loop=True):
         MainConsole.__init__(self, context)
 
         self.cl = cl
         self.tasks = tasks
-        self.loop = "True"
+        self.loop = "True" if loop else "False"
         self.interactive = True
         # boolean to track whether currently creating a Sheepl
         self.birth = False
@@ -90,13 +87,11 @@ class SheeplConsole(MainConsole):
 
             # check to see if the file exists already from a previous Sheepl creation
             output_base = "output/"
-            file_name = name.replace(' ', '_')
-            file_name = name.lower() + '.au3'
-            file_name = output_base + file_name
+            file_name = output_base + name.lower().replace(' ', '_') + '.au3'
             chk_file = Path(file_name)
 
             if chk_file.is_file():
-                print(self.cl.red("[!] The Sheepl output file '{}' already exists"))
+                print(self.cl.red("[!] The Sheepl output file '{}' already exists".format(file_name)))
                 self.replace_file = self.ask_yes_no_question("[?] Do you want to replace this? {}".format(self.cl.green("<yes> <no> : ")))
                 if self.replace_file == True:
                     print("[-] Removing file : {}".format(self.cl.yellow(file_name)))
@@ -114,26 +109,24 @@ class SheeplConsole(MainConsole):
 
     def do_task(self, task):
         """
-        Specifies the task to assign the Sheepl
+        Assign a task to the current Sheepl
+        example: task PowerShell
         """
-
-        if self.birth:
-            if task:
-                # need to add check for ^^ to see if this is in the list.
-                # BUG >> you can use task notexist
-                # prob best to refactor call so that you don't need to loop over everytime
-                # set to available_tasks = self.tasks.locate_available_tasks().items()
-                print(self.cl.yellow("[>] You have selected : " + task))
-
-                # requests the Sheepl Object Generates a task and returns it
-                self.csh.generate_task(task)
-
-            else:
-                print(self.cl.red("[!] <ERROR> You need to specify a task e.g. 'task <name>'"))
-                print("[?] You can list available tasks using the command 'list'")
-
-        else:
+        if not self.birth:
             print(self.cl.red("[!] You need to create a Sheepl to assign tasks to first of all"))
+            return
+
+        if not task:
+            print(self.cl.red("[!] <ERROR> You need to specify a task e.g. 'task <name>'"))
+            print("[?] You can list available tasks using the command 'list'")
+            return
+
+        if task not in self.csh.task_list.values():
+            print(self.cl.red("[!] <ERROR> Unknown task '{}'. Use 'list' to see available tasks.".format(task)))
+            return
+
+        print(self.cl.yellow("[>] You have selected : " + task))
+        self.csh.generate_task(task)
 
 
     def do_list(self, arg):
@@ -205,9 +198,9 @@ class SheeplConsole(MainConsole):
         Exits the program
         """
         print("------------------------------------------")
-        print("""
+        print(r"""
                       /\___
-            @@@@@@@@@@@  O \\
+            @@@@@@@@@@@  O \
         @@@@@@@@@@@@@@@____/--[ later ]
         @@@@@@@@@@@@@@@
             ||      ||
@@ -229,7 +222,7 @@ class SheeplConsole(MainConsole):
         Questions to setup the initial Sheepl
         """
 
-        print(self.cl.yellow("[%] Creating Sheepl called '{}'").format(name))
+        print(self.cl.yellow("[%] Creating Sheepl called '{}'".format(name)))
         # check the input for spacing
         print("[?] How long would you like {} to take to complete tasks?".format(self.cl.green_ul(name)))
         # NEW: function to deal with time issue bug : requires 'm', 'h' or 'd'
@@ -255,28 +248,17 @@ class SheeplConsole(MainConsole):
 
 
     def set_time(self):
-        """
-        Creates the logic to deal with the time issue
-        """
-        # might be a better way now __!
         print("[!] Time values are minutes {}".format(self.cl.green_ul("(m), hours (h) or days (d)")))
-
-        # loop round until either enter
         while 1:
-            total_time = input("#> Enter the time (e.g. 45m or 6h) : ")
-            # catch the enter to accept the default
+            total_time = input("#> Enter the time (e.g. 45m or 6h or 2d) : ")
             if len(total_time) == 0:
                 total_time = "10m"
                 print("[!] Setting default total time to 10 minutes")
                 return total_time
-            else:
-                # check to see if the input ends with the options in the time_value list
-                # endswith expects a str so list comprehension is the winner here
-                if total_time.endswith("m") or total_time.endswith("h") or total_time.endswith("d"):
-                    print("[!] Setting total time to {}".format(self.cl.green_ul(total_time)))
-                    return total_time
-                else:
-                    print(self.cl.red("[!] Error : Time values end with minutes (m), hours (h) or days (d)"))
+            if total_time.endswith(("m", "h", "d")):
+                print("[!] Setting total time to {}".format(self.cl.green_ul(total_time)))
+                return total_time
+            print(self.cl.red("[!] Error : Time values end with (m), (h) or (d)"))
 
 
     def ask_yes_no_question(self, question):
@@ -299,4 +281,6 @@ class SheeplConsole(MainConsole):
         """
         Tab complete for task list
         """
+        if not hasattr(self, 'csh'):
+            return []
         return [i for i in self.csh.task_list.values() if i.startswith(text)]

@@ -15,12 +15,10 @@ __author__ = "Matt Lorentzen @lorentzenman"
 __license__ = "MIT"
 
 import cmd
-import sys
 import random
 import textwrap
 
 from utils.base.base_cmd_class import BaseCMD
-#from utils.typing import TypeWriter
 
 
 class PuttyConnection(BaseCMD):
@@ -49,8 +47,7 @@ class PuttyConnection(BaseCMD):
         self.cl = cl
 
         # Overrides Base Class Prompt Setup
-        if csh.creating_subtasks == True:
-            print("[^] creating subtasks >>>>>>>>")
+        if csh.creating_subtasks:
             self.baseprompt = cl.yellow('[>] Creating subtask\n{} > puttyconnection >: '.format(csh.name.lower()))
         else:
             self.baseprompt = cl.yellow('{} > puttyconnection >: '.format(csh.name.lower()))
@@ -101,15 +98,10 @@ class PuttyConnection(BaseCMD):
     #######################################################################
 
     def do_new(self, arg):
-        """ 
-        This command creates a new Word document
         """
-        # Init tracking booleans
-        # method from parent class BaseCMD
-        # Inverse check to see if task has already started
-        # Booleans are set in parent method
-        # method from parent class BaseCMD
-        if self.check_task_started() == False:
+        Start a new PuttyConnection interaction
+        """
+        if self.check_task_started():
             print("[!] Starting : 'PuttyConnection_{}'".format(str(self.csh.counter.current())))
             # OCD Line break
             print()
@@ -120,27 +112,25 @@ class PuttyConnection(BaseCMD):
         """
         Enter the computer name
         """
-        if self.taskstarted == False:
+        if not self.taskstarted:
             print(self.cl.red("[!] <ERROR> You need to start a new PuttyConnection Interaction."))
             print(self.cl.red("[!] <ERROR> Start this with 'new' from the menu."))
-        
+
         else:
             if not self.assigned_credentials:
                 self.credential_input()
             else:
                 answer = self.ask_yes_no_question("[?] Overwrite stored credentials? {} {} :> ".format(
-                                                        (self.cl.green("<yes>")), 
+                                                        (self.cl.green("<yes>")),
                                                         (self.cl.red("<no>"))
                                                         )
                                                     )
-                if answer == True:
+                if answer:
                     self.credential_input()
-            
-
-        print("[!] PuttyConnection Details" )
-        print("[*] The target IP address is :   {}".format(self.cl.green(self.computer)))
-        print("[*] The Username is set to :     {}".format(self.cl.green(self.username)))
-        print("[*] The Pasword is set to :      {}".format(self.cl.green(self.password)))
+            print("[!] PuttyConnection Details")
+            print("[*] The target IP address is :   {}".format(self.cl.green(self.computer)))
+            print("[*] The Username is set to :     {}".format(self.cl.green(self.username)))
+            print("[*] The Password is set to :      {}".format(self.cl.green(self.password)))
 
 
     def do_show_credentials(self, arg):
@@ -158,9 +148,9 @@ class PuttyConnection(BaseCMD):
         else:
             print("[*] The Username is set to :     {}".format(self.cl.green("None")))
         if self.password:
-            print("[*] The Pasword is set to :      {}".format(self.cl.green(self.password)))
+            print("[*] The Password is set to :      {}".format(self.cl.green(self.password)))
         else:
-            print("[*] The Pasword is set to :      {}".format(self.cl.green("None")))
+            print("[*] The Password is set to :      {}".format(self.cl.green("None")))
 
 
     def do_cmd(self, command):
@@ -171,14 +161,12 @@ class PuttyConnection(BaseCMD):
         Specify the command to run in the shell
         """
         if command:
-            if self.taskstarted == True:   
+            if self.taskstarted:
                 print(command)
                 self.commands.append(command)
             else:
-                if self.taskstarted == False:
-                    print(self.cl.red("[!] <ERROR> You need to start a new PuttyConnection Interaction."))
-                    print(self.cl.red("[!] <ERROR> Start this with 'new' from the menu."))
-                print("[!] <ERROR> You need to supply the command for typing")
+                print(self.cl.red("[!] <ERROR> You need to start a new PuttyConnection Interaction."))
+                print(self.cl.red("[!] <ERROR> Start this with 'new' from the menu."))
 
 
     def do_command_file(self, input_file):
@@ -187,19 +175,17 @@ class PuttyConnection(BaseCMD):
         expect one per line
         """
         if input_file:
-            if self.taskstarted == True:
+            if self.taskstarted:
                 try:
                     with open(input_file) as command_file:
-                        for command in command_file.readlines():  
+                        for command in command_file.readlines():
                             self.commands.append(command.rstrip('\n'))
 
-                except:
-                    print("[!] Error reading file : {}".format(self.cl.red(input_file)))
+                except OSError as e:
+                    print("[!] Error reading file : {} ({})".format(self.cl.red(input_file), e))
             else:
-                if self.taskstarted == False:
-                    print(self.cl.red("[!] <ERROR> You need to start a new PuttyConnection Interaction."))
-                    print(self.cl.red("[!] <ERROR> Start this with 'new' from the menu."))
-                print("[!] <ERROR> You need to supply the command for typing")
+                print(self.cl.red("[!] <ERROR> You need to start a new PuttyConnection Interaction."))
+                print(self.cl.red("[!] <ERROR> Start this with 'new' from the menu."))
 
 
 
@@ -262,7 +248,7 @@ class PuttyConnection(BaseCMD):
             commandname_{counter}, and task
         """
         current_counter = str(self.csh.counter.current())
-        self.csh.add_task('PuttyConnection' + current_counter, self.create_autoit_function())
+        self.csh.add_task('PuttyConnection_' + current_counter, self.create_autoit_function())
 
 
     def create_autoit_function(self):
@@ -299,16 +285,16 @@ class PuttyConnection(BaseCMD):
 
             print(f"[*] Setting the command attribute : {self.computer}")
             print(f"[*] Setting the command attribute : {self.username}")
-            print(f"[*] Setting the command attribute : {self.password}")
+            print(f"[*] Setting the command attribute : ****")
             print(f"[*] Setting the command attribute : {self.commands}")
         
-        except:
-            print(self.cl.red("[!] Error Setting JSON Profile attributes, check matching key values in the profile"))
+        except KeyError as e:
+            print(self.cl.red("[!] Error Setting JSON Profile attributes, missing key: {}".format(e)))
 
         # once these have all been set in here, then self.create_autoIT_block() gets called which pushes the task on the stack
         self.create_autoIT_block()
 
-    
+
     # --------------------------------------------------->
     # Create Open Block
 
@@ -323,26 +309,13 @@ class PuttyConnection(BaseCMD):
         ; < ----------------------------------------- >
 
         """
-        if self.csh.creating_subtasks == False:
+        if not self.csh.creating_subtasks:
             function_declaration += "PuttyConnection_{}()".format(str(self.csh.counter.current()))
 
         return textwrap.dedent(function_declaration)
 
 
     def open_puttyconnection(self):
-            """
-            Creates the AutoIT Function Declaration Entry
-            """
-            
-            """
-            # Note a weird bug that the enter needs to be 
-            # passed as format string argument as escaping
-            # is ignored on a multiline for some reason
-            # if it gets sent as an individual line as in text_typing_block()
-            # >> typing_text += "Send('exit{ENTER}')"
-            # everything works. Strange, Invoke-OCD, and then stop caring
-            # and push it through the format string.
-            """
 
             _open_puttyconnection = """
 
@@ -376,9 +349,9 @@ class PuttyConnection(BaseCMD):
                 sleep(4000)
 
             """.format(str(self.csh.counter.current()), "{ENTER}",
-                            self.computer + "{ENTER}",
-                            self.username + "{ENTER}",
-                            self.password + "{ENTER}"
+                            self._escape_send(self.computer) + "{ENTER}",
+                            self._escape_send(self.username) + "{ENTER}",
+                            self._escape_send(self.password) + "{ENTER}"
                         )
 
             return textwrap.dedent(_open_puttyconnection)
@@ -396,7 +369,7 @@ class PuttyConnection(BaseCMD):
 
         for command in self.commands:
             # these are individual send commands so don't need to be wrapped in a block
-            typing_text += ('Send("' + command + '{ENTER}")\n')
+            typing_text += ('Send("' + self._escape_send(command) + '{ENTER}")\n')
             command_delay = str(random.randint(2000, 20000))
             typing_text += ("sleep(" + command_delay + ")\n")
      

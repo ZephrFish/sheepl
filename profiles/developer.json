@@ -1,0 +1,132 @@
+{
+  "sheepl": {
+    "name": "Cipher",
+    "total_time": "40m",
+    "typing_speed": 90,
+    "loop": "True",
+    "icon": "False",
+    "tasks": [
+      {
+        "task": "Csc",
+        "source": "C:\\Dev\\src\\HealthCheck\\HealthCheck.cs",
+        "output": "C:\\Dev\\bin\\HealthCheck.exe",
+        "target": "exe"
+      },
+      {
+        "task": "Msbuild",
+        "project": "C:\\Dev\\CorpApi\\CorpApi.csproj",
+        "configuration": "Release",
+        "target": "Build",
+        "verbosity": "minimal"
+      },
+      {
+        "task": "WinGet",
+        "action": "list",
+        "package": ""
+      },
+      {
+        "task": "CScript",
+        "script": "C:\\Dev\\scripts\\db_seed.vbs",
+        "args": "//Nologo"
+      },
+      {
+        "task": "Wscript",
+        "script": "C:\\Dev\\scripts\\deploy_config.vbs",
+        "script_args": "//B //Nologo"
+      },
+      {
+        "task": "Mshta",
+        "hta_path": "C:\\Dev\\tools\\config_ui.hta"
+      },
+      {
+        "task": "Ngen",
+        "assembly_path": "C:\\Dev\\bin\\CorpLib.dll"
+      },
+      {
+        "task": "Ilasm",
+        "source_file": "C:\\Dev\\il\\patch.il",
+        "output_type": "dll"
+      },
+      {
+        "task": "Vbc",
+        "source_file": "C:\\Dev\\vb\\ReportGen.vb",
+        "reference_dll": "Microsoft.VisualBasic.dll"
+      },
+      {
+        "task": "Jsc",
+        "js_file": "C:\\Dev\\js\\build_tool.js",
+        "target_type": "exe"
+      },
+      {
+        "task": "Installutil",
+        "assembly_path": "C:\\Dev\\bin\\CorpService.exe",
+        "uninstall": false
+      },
+      {
+        "task": "RegAsm",
+        "dll_path": "C:\\Dev\\bin\\CorpComLib.dll",
+        "unregister": false
+      },
+      {
+        "task": "RegSvcs",
+        "dll_path": "C:\\Dev\\bin\\CorpCom.dll"
+      },
+      {
+        "task": "Dotnet",
+        "dll_path": "C:\\Dev\\bin\\CorpWorker.dll"
+      },
+      {
+        "task": "Xsd",
+        "input_file": "C:\\Dev\\schemas\\api_schema.xsd",
+        "output_dir": "C:\\Dev\\generated"
+      },
+      {
+        "task": "Fsi",
+        "script_path": "C:\\Dev\\fsharp\\data_transform.fsx"
+      },
+      {
+        "task": "WinDbg",
+        "executable_path": "C:\\Dev\\bin\\CorpService.exe",
+        "debug_args": "--config debug.ini"
+      },
+      {
+        "task": "Certutil",
+        "target_file": "C:\\Dev\\certs\\signing.pfx",
+        "query_store": true
+      },
+      {
+        "task": "PowerShell",
+        "cmd": [
+          "dotnet restore C:\\Dev\\CorpApi\\CorpApi.csproj",
+          "Get-Content C:\\Dev\\logs\\build.log | Select-String -Pattern 'error|warning' | Select -Last 20"
+        ]
+      },
+      {
+        "task": "CommandShell",
+        "cmd": [
+          "dotnet test C:\\Dev\\CorpApi.Tests\\CorpApi.Tests.csproj --no-build",
+          "git log --oneline -10"
+        ]
+      },
+      {
+        "task": "Expand",
+        "source": "C:\\Dev\\packages\\runtime.win-x64.cab",
+        "dest": "C:\\Dev\\packages\\runtime-extracted",
+        "list_only": false
+      },
+      {
+        "task": "Tar",
+        "action": "create",
+        "source": "C:\\Dev\\CorpApi",
+        "dest": "C:\\Dev\\releases\\CorpApi_v2.1.tar"
+      },
+      {
+        "task": "Findstr",
+        "search_string": "ConnectionString",
+        "path": "C:\\Dev\\CorpApi",
+        "recursive": true,
+        "case_insensitive": true
+      }
+    ]
+  }
+}

@@ -10,7 +10,6 @@ __version__ = "2.3"
 
 
 import sys
-import logging
 import json
 import random
 import signal
@@ -75,19 +74,14 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description="Creating realistic user behaviour for tradecraft emulation.")
     main_parser = parser.add_argument_group('Main Program', 'Core Program Settings')
     main_parser.add_argument("--interactive", action="store_true", default=False, help="Launches an interactive console making it easier to create complex sequences")
-    main_parser.add_argument("--loop", action="store_false", help="Loops the program based around the total_time, will create actions and then repeat", default=True)
+    main_parser.add_argument("--no_loop", action="store_true", default=False, help="Run tasks once without looping; default behaviour loops continuously")
     main_parser.add_argument("--no_colour", action="store_false", help="Colours the output in the terminal <boolean> : defaults to True", default=True)
     main_parser.add_argument("--no_tray", action="store_true", help="Removes compiled script tray icon", default=False)
+    main_parser.add_argument("--list", action="store_true", default=False, help="List available tasks and exit")
 
     # Profiles Options
     profile_group = parser.add_argument_group('Profiles', 'Creates Sheepl files from JSON format files')
     profile_group.add_argument("--profile", type=argparse.FileType('r', encoding='UTF-8'), help="Specifies a profile and will import commands based on the JSON file")
-
-    # Template Engine
-    #template_engine = parser.add_argument_group('Template Engine', 'Used to create a "task" template with boiler plate code and CMD module')
-    #template_engine.add_argument("--template", help="Name of the template")
-    #template_engine.add_argument("--category", help="Path category for module : all base tasks start within 'tasks' automatically")
-
 
     # counts the supplied number of arguments and prints help if they are missing
     if len(sys.argv)==1:
@@ -106,7 +100,7 @@ def parse_arguments():
 
 
 def main():
-    banner("2.3")
+    banner(__version__)
     # hr = "------------------------------------"
     # counter below needs to be added as part of the Sheepl Object
     # this should get automatically incremented either based on the
@@ -114,66 +108,26 @@ def main():
     # Main Parser Setup
     args = parse_arguments()
 
-    # create project root
-    #ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-
-
     # assign colour output
     colour_output = args.no_colour
     print("[!] Colour output is set to : {}".format(str(colour_output).upper()))
     cl = ColourText(colour_output)
     tasks = Tasks()
 
-    # gets global header declarations for autoIT script
-    # >> Global Calls
+    if args.list:
+        print(cl.green("[!] Available tasks:"))
+        for task in tasks.locate_available_tasks().values():
+            print("[*] {}".format(task))
+        print()
+        sys.exit(0)
 
-    # manual check for Interactive
     if args.interactive:
-        interactive = True
         context = ConsoleContext()
-        con = SheeplConsole(context, cl, tasks)
+        con = SheeplConsole(context, cl, tasks, loop=not args.no_loop)
         con.cmdloop()
 
-
-    # template functions need updating for the stub code so commenting out this feature for now.
-    # will fix in next push
-    # Check if creating template stub file and category.
-    # this should be replaced with pathlib functions
-    #if args.template and not args.category:
-    #    print(cl.red("[!] You must specify a category eg 'network'"))
-    #    print("[>] If this path does not exist, then it will be created")
-
-    #elif args.template:
-    #    if not os.path.isdir('tasks/' + args.category.lower()):
-    #        print(cl.yellow("[!] Couldn't find this category : " + args.category.lower()))
-    #        print(cl.green("[!] Creating {} category path now.".format(args.category.lower())))
-    #        os.mkdir('tasks/' + args.category.lower())
-    #    else:
-    #        print("[>] Category already Exists : " + cl.red("tasks/" + args.category.lower()))
-    #        os.chdir('tasks/' + args.category.lower())
-    #        if not os.path.isfile(args.template + '.py'):
-    #            print("[!] Creating task template: {}".format(cl.green(args.template)))
-    #            CreateTemplate(args.template)
-
-    #        if os.path.isfile(args.template + '.py'):
-    #            print(cl.red("[!] Task template already exists : " + args.template))
-    #            # spam loop until yes or no is answered
-    #            while 1:
-    #                replace_template = input("[?] Do you want to replace this file? <yes> <no> : ")
-    #                if replace_template.lower() == "yes" or replace_template.lower() == "no":
-    #                    break
-    #            if replace_template.lower() == "yes":
-    #                print("[!] Creating new task template : " + cl.green(args.template + '.py'))
-    #                CreateTemplate(args.template)
-    #            else:
-    #                print(cl.green("[!] Leaving orginal template intact"))
-
-
-    # create from JSON profile
     if args.profile:
         print("[!] Create a sheepl from the profile file : {}".format(cl.green(args.profile.name)))
-        # Set Interactive to False
-        interactive = False
         Profile(cl, args.profile.name, tasks)
 
 

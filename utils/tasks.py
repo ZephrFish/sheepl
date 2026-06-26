@@ -11,12 +11,9 @@ __author__ = "Matt Lorentzen @lorentzenman"
 __license__ = "MIT"
 
 
-#import glob
 import os
-import sys
 import pathlib
 import importlib
-
 
 
 class Tasks(object):
@@ -25,7 +22,6 @@ class Tasks(object):
     This is the task object. It uses pathlib to parse the class files
     that are defined for tasks
     """
-    class_start = ''
 
     def __init__(self):
         
@@ -66,14 +62,15 @@ class Tasks(object):
         """
         Creates a task an imports the path to the module
         """
+        class_start = None
         try:
             task_module = importlib.import_module(module_import_path)
-            self.class_start = getattr(task_module, module)
+            class_start = getattr(task_module, module)
 
-        except:
-            print("Error importing module")
+        except (ImportError, AttributeError) as e:
+            print("Error importing module: {}".format(e))
 
-        return self.class_start
+        return class_start
 
 
     def display_available_tasks(self, task_list):

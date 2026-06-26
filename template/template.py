@@ -252,7 +252,7 @@ class CreateTemplate(object):
             # Booleans are set in parent method
             
             # method from parent class BaseCMD
-            if self.check_task_started() == False:
+            if self.check_task_started():
                 print("[!] Starting : '{}_{}'".format(str(self.csh.counter.current())))
                 # OCD Line break
                 print()
@@ -279,13 +279,11 @@ class CreateTemplate(object):
             # Uncomment
             \"""
             if command:
-                if self.taskstarted == True:   
+                if self.taskstarted:
                     self.commands.append(command)
                 else:
-                    if self.taskstarted == False:
-                        print(self.cl.red("[!] <ERROR> You need to start a new {} Interaction."))
-                        print(self.cl.red("[!] <ERROR> Start this with 'new' from the menu."))
-                    print("[!] <ERROR> You need to supply the command for typing")
+                    print(self.cl.red("[!] <ERROR> You need to start a new {} Interaction."))
+                    print(self.cl.red("[!] <ERROR> Start this with 'new' from the menu."))
             pass
             \"""
         """.format(self.name, self.name)
@@ -410,7 +408,7 @@ class CreateTemplate(object):
             These are all the elements that get passed into the 
             @static method as keyword arguments
             Essentially, this is everything that needs to be passed
-            to create the InternetExplorer object
+            to create the task object
 
             Parse the 'kwargs' dictionary for the arguments
             \"""
@@ -501,7 +499,7 @@ class CreateTemplate(object):
         autoIT_block_definition += """
 
                 \"""
-                if self.csh.creating_subtasks == False:
+                if not self.csh.creating_subtasks:
                     function_declaration += "{}_{}()".format(str(self.counter))
 
                 return textwrap.dedent(function_declaration)

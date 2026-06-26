@@ -1,0 +1,78 @@
+{
+  "sheepl" :
+  {
+    "name": "Venture",
+    "total_time": "25m",
+    "typing_speed": 60,
+    "loop": "True",
+    "icon": "False",
+    "tasks": [
+      {
+        "task"            : "Edge",
+        "destination_url" : "https://crm.corp.internal/opportunities"
+      },
+      {
+        "task"    : "Outlook",
+        "to"      : "prospect.lead@clientco.com",
+        "subject" : "Follow-up: Product Demo and Proposal",
+        "body"    : [
+          "Hi,",
+          "Thank you for your time during yesterday's demo.",
+          "I have attached our proposal document for your review.",
+          "Please let me know if you have any questions or would like to schedule a follow-up call.",
+          "Looking forward to hearing from you.",
+          "Best regards"
+        ]
+      },
+      {
+        "task" : "Excel",
+        "data" : [
+          ["Account", "Region", "ARR", "Deal Stage", "Close Date", "Owner"],
+          ["Meridian Corp", "EMEA", "85000", "Proposal", "2026-07-31", "T.Walsh"],
+          ["Northgate Ltd", "UKI", "42000", "Negotiation", "2026-07-15", "T.Walsh"],
+          ["Pacific Systems", "APAC", "120000", "Discovery", "2026-08-30", "T.Walsh"],
+          ["Summit Retail", "NA", "67500", "Closed Won", "2026-06-20", "T.Walsh"]
+        ]
+      },
+      {
+        "task"     : "Teams",
+        "channel"  : "Sales-EMEA",
+        "messages" : [
+          "Meridian Corp moved to Proposal stage - proposal going out this afternoon",
+          "Q3 pipeline review call is Thursday at 2pm - please update Salesforce before then"
+        ]
+      },
+      {
+        "task"               : "PowerPnt",
+        "presentation_path"  : "C:\\Users\\Sales\\Documents\\CorpProduct_PlatinumDeck_v3.pptx"
+      },
+      {
+        "task"       : "WordDocument",
+        "input_file" : "content/if.txt",
+        "save_name"  : "C:\\Users\\Sales\\Documents\\Meridian_Corp_Proposal_v2.docx"
+      },
+      {
+        "task"        : "Winproj",
+        "project_url" : "\\\\fileserver\\sales\\projects\\EnterpriseRollout_Plan.mpp"
+      },
+      {
+        "task"    : "Msiexec",
+        "action"  : "install",
+        "package" : "C:\\IT\\Installers\\SalesForce_Desktop_v5.msi",
+        "passive" : true
+      },
+      {
+        "task"           : "ProblemStepsRecorder",
+        "output"         : "C:\\Users\\Sales\\Desktop\\crm_login_issue.zip",
+        "screenshots"    : true,
+        "max_screenshots": 15,
+        "record_time"    : 30
+      },
+      {
+        "task"       : "HelpFile",
+        "chm_path"   : "C:\\Windows\\Help\\Windows.chm",
+        "browse_time": 10
+      }
+    ]
+  }
+}

@@ -16,10 +16,8 @@ __license__ = "MIT"
 
 
 import cmd
-import sys
 import textwrap
 
-#from utils.typing import TypeWriter
 from utils.base.base_cmd_class import BaseCMD
 
 
@@ -46,8 +44,7 @@ class WordDocument(BaseCMD):
         self.cl = cl
         
          # Overrides Base Class Prompt Setup
-        if csh.creating_subtasks == True:
-            print("[^] creating subtasks >>>>>>>>")
+        if csh.creating_subtasks:
             self.baseprompt = cl.yellow('[>] Creating subtask\n{} > command >: '.format(csh.name.lower()))
         else:
             self.baseprompt = cl.yellow('{} > worddocument >: '.format(csh.name.lower()))
@@ -84,7 +81,7 @@ class WordDocument(BaseCMD):
         # might be good to uplift this to the base class as
         # all modules might want the option
         # Check to make sure it's not already there, and if not add
-        if not self.autoIT_include_statement in self.csh.autoIT_UDF_includes:
+        if self.autoIT_include_statement not in self.csh.autoIT_UDF_includes:
             self.csh.autoIT_UDF_includes.append(self.autoIT_include_statement)
 
         # ----------------------------------- >
@@ -109,14 +106,13 @@ class WordDocument(BaseCMD):
         # method from parent class BaseCMD
         # Inverse check to see if task has already started
         # Booleans are set in parent method
-        if self.check_task_started() == False:
+        if self.check_task_started():
             print("[!] Starting : 'WordDocument_{}'".format(str(self.csh.counter.current())))
 
             # init typing block with an empty string when new is first called
             self.typing_block = ""
 
             print("[?] Enter the name to save the document")
-            ## BUG check for extension!!
             file_name = input(self.cl.yellow(">: "))
             print("[?] Enter the Windows path location for document save")
             save_path = input(self.cl.yellow(">: "))
@@ -137,11 +133,6 @@ class WordDocument(BaseCMD):
         Specify the path to the input text file for typing
         < input_file /path/to/file >
         """
-
-        """
-        This file will also get pushed through the TypeWriter eventually
-        """
-
         try:
             if inputf:
                 if self.taskstarted:
@@ -157,8 +148,8 @@ class WordDocument(BaseCMD):
 
             else:
                 print(self.cl.red("[!] <ERROR> You need to supply the input file for typing"))
-        except:
-            print(self.cl.red("[!] <ERROR> Accessing input file"))
+        except OSError as e:
+            print(self.cl.red("[!] <ERROR> Accessing input file: {}".format(e)))
 
 
     def do_complete(self, arg):
@@ -168,7 +159,6 @@ class WordDocument(BaseCMD):
         # check check to see if this is already set after a succesful document creation
         # should never been 
 
-        print("task close out and write object for :" + self.csh.name)
         print("[!] Completing Task : {}".format(self.taskname))
         # >>>>>>>>>>>>>>>>>  COMMITS THE DOC <<<<<<<<<<<<<<<<<<<<<
         
@@ -240,12 +230,12 @@ class WordDocument(BaseCMD):
         print(f"[*] Setting the input file attribute : {self.input_file}")
         print(f"[*] Setting the save filename attribute : {self.save_name}")
 
-        # now read the input file and set 'self.typing_block' the contents
-        # TODO - look at making this into a path object using PathLib (checks for valid path as well)
-        #      - next version implement typing object
-        
-        with open(self.input_file) as f:
-            self.typing_block += (f.read().strip()) 
+        try:
+            with open(self.input_file) as f:
+                self.typing_block += f.read().strip()
+        except OSError as e:
+            print(self.cl.red("[!] Error reading input file '{}': {}".format(self.input_file, e)))
+            return
 
         # once these have all been set in here, then self.create_autoIT_block() gets called which pushes the task on the stack
         self.create_autoIT_block()
@@ -268,7 +258,7 @@ class WordDocument(BaseCMD):
         ; < ----------------------------------- >
 
         """
-        if self.csh.creating_subtasks == False:
+        if not self.csh.creating_subtasks:
             function_declaration += "WordDocument_{}()".format(str(self.csh.counter.current()))
 
         return textwrap.dedent(function_declaration)
@@ -304,30 +294,12 @@ class WordDocument(BaseCMD):
         """
         Takes the Typing Text Input
         """
-
-        # first read the input text
-        # this will change to be grabbed from the list created in the CMD console
-        # the processing of each file can be pushed through the TypeWriter function
-        
-        # This uses the textwrap.indent to add in the indentation
-        
-        typing_text = '\n' + 'Send("'
-        # now loop round the input_text
-        # some funkyness here to treat the carriage returns in the file as enter commands
-        # represents how someone would use the enter key when typing
-
-        # self.typing_block is part of the init of the object and gets
-        # populated by the console when the file is read
-        # TODO - this will get pushed through the typing object
-
-        for l in self.typing_block.splitlines():
-            # check if this is an empty line -> ie an enter key
-            if (len(l) == 0):
-                typing_text += ("{ENTER}")
+        typing_text = '\n'
+        for line in self.typing_block.splitlines():
+            if len(line) == 0:
+                typing_text += 'Send("{ENTER}")\n'
             else:
-                typing_text += (l)
-            # close off the Send
-        typing_text += ('")')
+                typing_text += 'Send("{}")\n'.format(self._escape_send(line))
 
         return textwrap.indent(typing_text, self.indent_space)
 

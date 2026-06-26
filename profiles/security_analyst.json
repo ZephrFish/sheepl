@@ -1,0 +1,96 @@
+{
+  "sheepl": {
+    "name": "Sentinel",
+    "total_time": "35m",
+    "typing_speed": 70,
+    "loop": "True",
+    "icon": "False",
+    "tasks": [
+      {
+        "task": "MpCmdRun",
+        "scan_type": "full",
+        "update_sigs": true
+      },
+      {
+        "task": "Certutil",
+        "target_file": "C:\\Quarantine\\suspicious_file.exe",
+        "query_store": false
+      },
+      {
+        "task": "SigVerif"
+      },
+      {
+        "task": "PktMon",
+        "action": "list"
+      },
+      {
+        "task": "Regedit",
+        "nav_key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run",
+        "browse_time": 20,
+        "export_key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run",
+        "export_path": "C:\\Investigations\\run_keys_export.reg"
+      },
+      {
+        "task": "Reg",
+        "action": "query",
+        "key": "HKLM\\SYSTEM\\CurrentControlSet\\Services"
+      },
+      {
+        "task": "WmicQuery",
+        "query": "process get Name,ProcessId,ParentProcessId,CommandLine"
+      },
+      {
+        "task": "Netsh",
+        "query": "portproxy"
+      },
+      {
+        "task": "FltMc",
+        "filter_name": ""
+      },
+      {
+        "task": "StorDiag",
+        "output_dir": "C:\\Investigations\\StorageDiag"
+      },
+      {
+        "task": "RdrLeakDiag",
+        "pid": "940",
+        "output_dir": "C:\\Investigations\\LeakDiags"
+      },
+      {
+        "task": "BitsAdmin",
+        "job_name": ""
+      },
+      {
+        "task": "CertReq",
+        "config_url": "http://ca.corp.internal/certsrv/mscep/mscep.dll",
+        "request_file": "C:\\Certs\\analyst_ws.req",
+        "output_file": "C:\\Certs\\analyst_ws.cer"
+      },
+      {
+        "task": "Print",
+        "source_file": "C:\\Investigations\\IOC_report.txt",
+        "destination": "LPT1"
+      },
+      {
+        "task": "Finger",
+        "remote_host": "infosec-tools.corp.internal",
+        "username": "analyst"
+      },
+      {
+        "task": "RpcPing",
+        "target_server": "dc01.corp.internal",
+        "endpoint": "135",
+        "auth_type": "NTLM"
+      },
+      {
+        "task": "OfflineScannerShell",
+        "scan_path": "C:\\Quarantine"
+      },
+      {
+        "task": "ProcDump",
+        "target_process": "lsass.exe",
+        "output_path": "C:\\Investigations\\lsass.dmp"
+      }
+    ]
+  }
+}

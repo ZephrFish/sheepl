@@ -1,0 +1,97 @@
+{
+  "sheepl" :
+  {
+    "name": "Conduit",
+    "total_time": "35m",
+    "typing_speed": 65,
+    "loop": "True",
+    "icon": "False",
+    "tasks": [
+      {
+        "task"          : "RemoteDesktop",
+        "computer"      : "WS-ACCT-047.corp.internal",
+        "username"      : "helpdesk",
+        "password"      : "Supp0rt$2026!",
+        "domain_joined" : true
+      },
+      {
+        "task"     : "PuttyConnection",
+        "computer" : "192.168.10.5",
+        "username" : "admin",
+        "password" : "Lin@xSrv2024!",
+        "cmd"      : [
+          "systemctl status sshd",
+          "df -h",
+          "last | head -20"
+        ]
+      },
+      {
+        "task"        : "Regedit",
+        "nav_key"     : "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList",
+        "browse_time" : 12
+      },
+      {
+        "task"         : "ServiceControl",
+        "action"       : "query",
+        "service_name" : "spooler"
+      },
+      {
+        "task"      : "SchTasks",
+        "action"    : "query"
+      },
+      {
+        "task"          : "Wuauclt",
+        "update_server" : "http://wsus.corp.internal:8530"
+      },
+      {
+        "task"    : "Msiexec",
+        "action"  : "install",
+        "package" : "C:\\IT\\Installers\\CorpAV_latest.msi",
+        "passive" : true
+      },
+      {
+        "task"           : "ProblemStepsRecorder",
+        "output"         : "C:\\IT\\Tickets\\ticket_1042_steps.zip",
+        "screenshots"    : true,
+        "max_screenshots": 30,
+        "record_time"    : 60
+      },
+      {
+        "task"       : "PrintBrm",
+        "operation"  : "restore",
+        "target_dir" : "C:\\PrinterBackup",
+        "zip_file"   : "C:\\PrinterBackup\\printers_last_good.zip"
+      },
+      {
+        "task"        : "Certutil",
+        "target_file" : "C:\\IT\\Certs\\corp_root_ca.cer",
+        "query_store" : true
+      },
+      {
+        "task"     : "BitsAdmin",
+        "job_name" : ""
+      },
+      {
+        "task"        : "MpCmdRun",
+        "scan_type"   : "quick",
+        "update_sigs" : true
+      },
+      {
+        "task"       : "Query",
+        "subcommand" : "user"
+      },
+      {
+        "task"  : "WmicQuery",
+        "query" : "computersystem get Name,Manufacturer,Model,TotalPhysicalMemory"
+      },
+      {
+        "task"     : "Cmdkey",
+        "target"   : "WS-ACCT-047.corp.internal",
+        "username" : "helpdesk"
+      },
+      {
+        "task" : "SigVerif"
+      }
+    ]
+  }
+}

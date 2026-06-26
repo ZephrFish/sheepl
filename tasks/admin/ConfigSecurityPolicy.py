@@ -1,0 +1,298 @@
+
+# LOLBAS: ConfigSecurityPolicy.exe — Legitimate use: applying Windows Defender security policy configuration files
+# #######################################################################
+#
+#  Task : ConfigSecurityPolicy Interaction
+#
+# #######################################################################
+
+
+"""
+ Creates the autoIT stub code to be passed into the master compile
+
+ Simulates legitimate IT/admin use of ConfigSecurityPolicy.exe to apply
+ a Windows Defender security policy configuration file from a local path.
+
+ Takes a required policy_path parameter pointing to the local .xml or
+ policy file to apply.
+
+ The master script will already define the typing speed as part of the
+ master declarations.
+"""
+
+__author__ = "Matt Lorentzen @lorentzenman"
+__license__ = "MIT"
+
+
+import cmd
+import random
+import textwrap
+
+# Sheepl Class Imports
+from utils.base.base_cmd_class import BaseCMD
+
+
+class ConfigSecurityPolicy(BaseCMD):
+    """
+    # LOLBAS: ConfigSecurityPolicy.exe — Legitimate use: applying Windows Defender security policy configuration files
+
+    Inherits from BaseCMD
+        This parent class contains:
+        : do_back               > return to main menu
+        : do_discard            > discard current task
+        : do_complete           > completes the task and resets trackers
+        : check_task_started    > checks to see task status
+    """
+
+    def __init__(self, csh, cl):
+
+        # Calling super to inherit from the BaseCMD Class __init__
+        super(ConfigSecurityPolicy, self).__init__(csh, cl)
+
+        # Override the defined task name
+        self.taskname = 'ConfigSecurityPolicy'
+
+        # current Sheepl Object
+        self.csh = csh
+        # current colour object
+        self.cl = cl
+
+        # Overrides Base Class Prompt Setup
+        if csh.creating_subtasks:
+            self.baseprompt = cl.yellow('[>] Creating subtask\n{} > configsecuritypolicy >: '.format(csh.name.lower()))
+        else:
+            self.baseprompt = cl.yellow('{} > configsecuritypolicy >: '.format(csh.name.lower()))
+
+        self.prompt = self.baseprompt
+
+        # Path to the local policy configuration file to apply
+        self.policy_path = None
+
+        self.indent_space = '    '
+
+        self.introduction = """
+        ----------------------------------
+        [!] ConfigSecurityPolicy Interaction.
+        Type help or ? to list commands.
+        1: Start a new block using 'new'
+        2: Set the local policy file path using 'policy_path <path>'
+        3: Complete the interaction using 'complete'
+        """
+
+        # ----------------------------------- >
+        # now call the loop if we are in interactive mode by checking
+        # if we are parsing JSON
+
+        if not self.csh.json_parsing:
+            # call the intro and then start the loop
+            print(textwrap.dedent(self.introduction))
+            self.cmdloop()
+
+
+    #######################################################################
+    #  ConfigSecurityPolicy Console Commands
+    #######################################################################
+
+
+    def do_new(self, arg):
+        """
+        This command creates a new ConfigSecurityPolicy interaction block
+        """
+        # Init tracking booleans
+        # method from parent class BaseCMD
+        if self.check_task_started():
+            self.prompt = self.cl.blue("[*] Current Task : 'ConfigSecurityPolicy_{}'".format(str(self.csh.counter.current())) + "\n" + self.baseprompt)
+
+
+    def do_policy_path(self, policy_path):
+        """
+        Set the local path to the Windows Defender policy configuration file to apply.
+        Example: policy_path C:\\Policies\\defender_policy.xml
+        """
+        if policy_path:
+            if self.taskstarted:
+                self.policy_path = policy_path.strip()
+                print(self.cl.green("[*] Policy path set to: {}".format(self.policy_path)))
+            else:
+                print(self.cl.red("[!] <ERROR> You need to start a new ConfigSecurityPolicy Interaction."))
+                print(self.cl.red("[!] <ERROR> Start this with 'new' from the menu."))
+        else:
+            print(self.cl.red("[!] <ERROR> Please provide a policy file path."))
+
+
+    def do_assigned(self, arg):
+        """
+        Get the current assigned ConfigSecurityPolicy configuration
+        """
+        print(self.cl.green("[?] Currently Assigned ConfigSecurityPolicy Configuration"))
+        print("[>] Policy Path : {}".format(self.policy_path if self.policy_path else "(not set — required)"))
+
+
+    def do_complete(self, arg):
+        """
+        This command calls the constructor on the AutoITBlock
+        with all the specific arguments
+        >> Check the AutoIT constructor requirements
+        """
+
+        if self.taskstarted:
+            if not self.policy_path:
+                print(self.cl.red("[!] <ERROR> policy_path is required. Set it with 'policy_path <path>'."))
+                return
+            self.create_autoIT_block()
+
+        # now reset the tracking values and prompt
+        self.complete_task()
+
+        # reset task-specific state for the next interaction
+        self.policy_path = None
+
+
+    ######################################################################
+    # ConfigSecurityPolicy AutoIT Block Definition
+    #######################################################################
+
+
+    def create_autoIT_block(self):
+        """
+        Creates the AutoIT Script Block
+        csh.add_tasks takes two positional arguments
+            commandname_{counter}, and task
+        """
+
+        current_counter = str(self.csh.counter.current())
+        self.csh.add_task('ConfigSecurityPolicy_' + current_counter, self.create_autoit_function())
+
+
+    def create_autoit_function(self):
+        """
+        Grabs all the output from the respective functions and builds the AutoIT output
+        """
+
+        autoIT_script = (
+            self.autoit_function_open() +
+            self.open_commandshell() +
+            self.text_typing_block() +
+            self.close_function()
+        )
+
+        return autoIT_script
+
+
+    def parse_json_profile(self, **kwargs):
+        """
+        Takes kwargs in and builds out task variables when using JSON profiles.
+        This function sets the various object attributes in the same way
+        that the interactive mode does.
+
+        Required JSON keys:
+            policy_path : str — absolute path to the local policy configuration file
+        """
+
+        print("[%] Setting attributes from JSON Profile")
+        print(f"[-] The following keys are needed for this task : {[x for x in list(kwargs.keys())[1:]]}")
+
+        self.policy_path = kwargs.get("policy_path", None)
+        if self.policy_path:
+            print(f"[*] Setting policy_path attribute : {self.policy_path}")
+        else:
+            print("[!] <ERROR> No policy_path provided — this is required for ConfigSecurityPolicy.")
+            return
+
+        # once these have all been set in here, then self.create_autoIT_block() gets called which pushes the task on the stack
+        self.create_autoIT_block()
+
+
+    # --------------------------------------------------->
+    # Create Open Block
+
+
+    def autoit_function_open(self):
+        """
+        Initial Entrypoint Definition for AutoIT function
+        """
+
+        fn = """
+        ; < ----------------------------------- >
+        ; <      ConfigSecurityPolicy Interaction
+        ; < ----------------------------------- >
+
+        """
+        if not self.csh.creating_subtasks:
+            fn += "ConfigSecurityPolicy_{}()".format(self.csh.counter.current())
+
+        return textwrap.dedent(fn)
+
+
+    # --------------------------------------------------->
+    # Define AutoIT Function
+
+    def open_commandshell(self):
+        """
+        Opens a CMD shell via Win+R run dialogue
+        """
+
+        _open_commandshell = """
+
+        Func ConfigSecurityPolicy_{}()
+
+            ; Creates a ConfigSecurityPolicy Interaction via CMD
+
+            Send("#r")
+            ; Wait 10 seconds for the Run dialogue window to appear.
+            WinWaitActive("Run", "", 10)
+            ; note this needs to be escaped
+            Send('cmd{}')
+            ; check to see if we are already in an RDP session
+            $active_window = _WinAPI_GetClassName(WinGetHandle("[ACTIVE]"))
+            ConsoleWrite($active_window & @CRLF)
+            $inRDP = StringInStr($active_window, "TscShellContainerClass")
+            ; if the result is greater than 1 we are inside an RDP session
+            if $inRDP < 1 Then
+                WinWaitActive("[CLASS:ConsoleWindowClass]", "", 10)
+                SendKeepActive("[CLASS:ConsoleWindowClass]")
+            EndIf
+
+
+        """.format(self.csh.counter.current(), "{ENTER}")
+
+        return textwrap.dedent(_open_commandshell)
+
+
+    # --------------------------------------------------->
+    # Typing Output
+
+    def text_typing_block(self):
+        """
+        Builds the ConfigSecurityPolicy command to type into the CMD window.
+        Applies the specified local policy configuration file.
+        """
+        typing_text = '\n'
+
+        # Apply the policy configuration file
+        apply_cmd = '"C:\\Program Files\\Windows Defender\\ConfigSecurityPolicy.exe" {}'.format(self.policy_path)
+        typing_text += 'Send("' + self._escape_send(apply_cmd) + '{ENTER}")\n'
+        typing_text += 'sleep({})\n'.format(random.randint(2000, 5000))
+
+        typing_text += "Send('exit{ENTER}')\n"
+        typing_text += "; Reset Focus\n"
+        typing_text += 'SendKeepActive("")'
+
+        return textwrap.indent(typing_text, self.indent_space)
+
+
+    # --------------------------------------------------->
+    # Close AutoIT Function
+
+    def close_function(self):
+        """
+        Closes the ConfigSecurityPolicy AutoIT function declaration
+        """
+
+        end_func = """
+
+        EndFunc
+
+        """
+
+        return textwrap.dedent(end_func)

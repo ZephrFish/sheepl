@@ -1,0 +1,56 @@
+{
+  "sheepl" :
+  {
+    "name": "Meridian",
+    "total_time": "30m",
+    "typing_speed": 60,
+    "loop": "True",
+    "icon": "False",
+    "tasks": [
+      {
+        "task"  : "Outlook",
+        "to"    : "team@company.internal",
+        "subject" : "Weekly status update",
+        "body"  : [
+          "Hi team,",
+          "Please find below this week's update.",
+          "All tasks are on track for delivery.",
+          "Let me know if you have any questions.",
+          "Thanks"
+        ]
+      },
+      {
+        "task"  : "Teams",
+        "channel" : "General",
+        "messages" : [
+          "Morning all, quick reminder about the standup at 10am",
+          "I'll share the updated slides beforehand"
+        ]
+      },
+      {
+        "task"  : "FileExplorer",
+        "path"  : "\\\\fileserver\\shared\\projects"
+      },
+      {
+        "task"  : "Excel",
+        "data"  : [
+          ["Name", "Department", "Q1", "Q2", "Q3"],
+          ["Alice", "Sales", "12500", "13200", "11800"],
+          ["Bob", "Marketing", "9800", "10500", "11000"],
+          ["Carol", "Engineering", "15000", "14800", "16200"]
+        ]
+      },
+      {
+        "task"  : "Edge",
+        "destination_url" : "https://intranet.company.internal"
+      },
+      {
+        "task"  : "PowerShell",
+        "cmd"   : [
+          "Get-ChildItem \\\\fileserver\\shared\\projects",
+          "Get-ADUser -Filter * -Properties LastLogonDate | Select Name, LastLogonDate | Sort LastLogonDate -Descending | Select -First 10"
+        ]
+      }
+    ]
+  }
+}

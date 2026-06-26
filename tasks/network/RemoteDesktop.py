@@ -19,12 +19,10 @@ __author__ = "Matt Lorentzen @lorentzenman"
 __license__ = "MIT"
 
 import cmd
-import sys
 import random
 import textwrap
 
 from utils.base.base_cmd_class import BaseCMD
-from utils.base.base_cmd_class import SubTaskCMD
 
 
 class RemoteDesktop(BaseCMD):
@@ -53,9 +51,7 @@ class RemoteDesktop(BaseCMD):
         # current colour object
         self.cl = cl
 
-         #  Overrides Base Class Prompt Setup
-        if csh.creating_subtasks == True:
-            print("[^] creating subtasks >>>>>>>>")
+        if csh.creating_subtasks:
             self.baseprompt = cl.yellow('[>] Creating subtask\n{} > remotedesktop >: '.format(csh.name.lower()))
         else:
             self.baseprompt = cl.yellow('{} > remotedesktop >: '.format(csh.name.lower()))
@@ -75,19 +71,12 @@ class RemoteDesktop(BaseCMD):
         self.indent_space = '    '
         self.commands = []
 
-        # ----------------------------------- >
-        #      Task Specific Variables
-        # ----------------------------------- >
-
-        # List to hold commands for current interaction for subtask
-        self.task_func_names = []
-        self.task_func_output = []
-
-        # Tracker for credential assignment
+        self.computer = ''
+        self.username = ''
+        self.password = ''
         self.assigned_credentials = False
-
-        # Configures Subtasking
-        self.subtask_supported = True         
+        self.domain_joined = True  # False adds a Windows Security prompt for non-domain machines
+        self.subtask_supported = True
 
         # ----------------------------------- >
         # now call the loop if we are in interactive mode by checking 
@@ -105,16 +94,10 @@ class RemoteDesktop(BaseCMD):
 
 
     def do_new(self, arg):
-        """ 
-        This command creates a new Word document
         """
-        # Init tracking booleans
-        # method from parent class BaseCMD
-        # Inverse check to see if task has already started
-        # Booleans are set in parent method
-
-        # method from parent class BaseCMD
-        if self.check_task_started() == False:
+        Start a new RemoteDesktop interaction
+        """
+        if self.check_task_started():
             print("[!] Starting : 'RemoteDesktop_{}'".format(str(self.csh.counter.current())))
             # OCD Line break
             print()
@@ -125,10 +108,10 @@ class RemoteDesktop(BaseCMD):
             """
             Enter the computer name
             """
-            if self.taskstarted == False:
+            if not self.taskstarted:
                 print(self.cl.red("[!] <ERROR> You need to start a new RemoteDesktop Interaction."))
                 print(self.cl.red("[!] <ERROR> Start this with 'new' from the menu."))
-            
+
             else:
                 if not self.assigned_credentials:
                     self.credential_input()
@@ -140,13 +123,13 @@ class RemoteDesktop(BaseCMD):
                         )
                     )
 
-                    if answer == True:
+                    if answer:
                         self.credential_input()
                 
                     print("[!] RemoteDesktop Details" )
                     print("[*] The target IP address is :   {}".format(self.cl.green(self.computer)))
                     print("[*] The Username is set to :     {}".format(self.cl.green(self.username)))
-                    print("[*] The Pasword is set to :      {}".format(self.cl.green(self.password)))
+                    print("[*] The Password is set to :      {}".format(self.cl.green(self.password)))
 
 
     def credential_input(self):
@@ -163,6 +146,25 @@ class RemoteDesktop(BaseCMD):
             self.assigned_credentials = True
 
 
+    def do_domain_joined(self, arg):
+        """
+        Toggle whether the source machine is domain-joined (default: yes).
+        Non-domain-joined machines receive a second Windows Security credential
+        prompt when connecting via RDP.
+        example: domain_joined
+        """
+        if self.taskstarted:
+            answer = self.ask_yes_no_question(
+                "[?] Is the source machine domain-joined? {} {} :> ".format(
+                    self.cl.green("<yes>"),
+                    self.cl.red("<no>")
+                )
+            )
+            self.domain_joined = answer
+            print("[*] Domain joined set to: {}".format(self.cl.green(str(self.domain_joined))))
+        else:
+            print(self.cl.red("[!] <ERROR> Start a new RemoteDesktop interaction first with 'new'."))
+
     def do_show_credentials(self, arg):
         """
         Shows the currently configured credentials for a session
@@ -178,9 +180,9 @@ class RemoteDesktop(BaseCMD):
             else:
                 print("[*] The Username is set to :     {}".format(self.cl.green("None")))
             if self.password:
-                print("[*] The Pasword is set to :      {}".format(self.cl.green(self.password)))
+                print("[*] The Password is set to :      {}".format(self.cl.green(self.password)))
             else:
-                print("[*] The Pasword is set to :      {}".format(self.cl.green("None")))
+                print("[*] The Password is set to :      {}".format(self.cl.green("None")))
         else:
             print(self.cl.red("[!] There are currently no credentials assigned"))
 
@@ -269,20 +271,15 @@ class RemoteDesktop(BaseCMD):
             self.computer = kwargs["computer"]
             self.username = kwargs["username"]
             self.password = kwargs["password"]
-            self.subtasks = kwargs["subtasks"]          
+            self.domain_joined = kwargs.get("domain_joined", True)
 
             print(f"[*] Setting the command attribute : {self.computer}")
             print(f"[*] Setting the command attribute : {self.username}")
-            print(f"[*] Setting the command attribute : {self.password}")
-            print(f"[*] Setting the command attribute : {self.subtasks}")
+            print(f"[*] Setting the command attribute : ****")
+            print(f"[*] Domain joined : {self.domain_joined}")
 
-            # this now needs to parse the list of dictionaries inside the subtasks key and then build
-            # this second subtasks dictionary is actually part of the Sheepl object self.csh.subtasks, so these dictionaries
-            # need to get pushed to self.csh.subtasks
-           
-        
-        except:
-            print(self.cl.red("[!] Error Setting JSON Profile attributes, check matching key values in the profile"))
+        except KeyError as e:
+            print(self.cl.red("[!] Error Setting JSON Profile attributes, missing key: {}".format(e)))
 
         # once these have all been set in here, then self.create_autoIT_block() gets called which pushes the task on the stack
         self.create_autoIT_block()
@@ -311,22 +308,16 @@ class RemoteDesktop(BaseCMD):
 
 
     def open_remotedesktop(self):
-        """
-        Creates the AutoIT Function Declaration Entry
-        """
 
-        """
-        # Note a weird bug that the enter needs to be 
-        # passed as format string argument as escaping
-        # is ignored on a multiline for some reason
-        # if it gets sent as an individual line as in text_typing_block()
-        # >> typing_text += "Send('exit{ENTER}')"
-        # everything works. Strange, Invoke-OCD, and then stop caring
-        # and push it through the format string.
-
-        # Note > Send('yourprogram{ENTER}')
-        # Example : Send('powershell{ENTER}')
-        """
+        domain_joined_block = ""
+        if not self.domain_joined:
+            domain_joined_block = (
+                '\n            ; Non-domain-joined machine: handle Windows Security credential prompt\n'
+                '            WinWaitActive("Windows Security", "", 15)\n'
+                '            SendKeepActive("Windows Security")\n'
+                '            Send("' + self._escape_send(self.username) +
+                '{TAB}' + self._escape_send(self.password) + '{ENTER}")\n'
+            )
 
         _open_remotedesktop = """
 
@@ -341,7 +332,6 @@ class RemoteDesktop(BaseCMD):
             ; <PROGRAM EXECUTION>
             Send("mstsc{}")
             WinWaitActive("Remote Desktop Connection", "", 10)
-            ;SendKeepActive("[CLASS:OpusApp]") get the name of this class
             ; Send ALT 'o' to open the RDP options
             Send("!o")
             Sleep(2000)
@@ -349,7 +339,7 @@ class RemoteDesktop(BaseCMD):
             Send("!c")
             Sleep(2000)
 
-            ; Send RDP Connection Informaiton
+            ; Send RDP Connection Information
             Send("{}{}")
             Sleep(2000)
             Send("{}{}")
@@ -357,7 +347,7 @@ class RemoteDesktop(BaseCMD):
             Send("{}{}")
             Sleep(2000)
             Send("!y")
-
+            {}
             ; pins the RDP connection as focus
             WinWaitActive("[CLASS:TscShellContainerClass]")
             SendKeepActive("[CLASS:TscShellContainerClass]")
@@ -366,47 +356,22 @@ class RemoteDesktop(BaseCMD):
             Send("{}{}")
 
         """.format(self.csh.counter.current(), "{ENTER}",
-                    self.computer, "{TAB}",
-                    self.username, "{ENTER}",
-                    self.password, "{ENTER}",
+                    self._escape_send(self.computer), "{TAB}",
+                    self._escape_send(self.username), "{ENTER}",
+                    self._escape_send(self.password), "{ENTER}",
+                    domain_joined_block,
                     "{ALT}", "{HOME}"
         )
 
-        return textwrap.dedent(_open_remotedesktop)   
+        return textwrap.dedent(_open_remotedesktop)
 
 
     def text_typing_block(self):
-        """
-        Takes the Typing Text Input
-        The bulk of Remote Desktop interactions
-        are via subtasks 
-        """
         typing_text = ''
-
-        #for key, value in self.commands:
         for key, value in self.csh.subtasks.items():
-            #print("The key is >> {}".format(key))
-        
-            typing_text += ("\n; ############################################\n")
-            typing_text += ("; [!] Assigned Subtask Interaction >> " + str(key) + '\n')
-            typing_text += (str(key) + "()" + '\n')
-            typing_text += "; [>] Assigned subtask function\n"
-
-        # for command in self.commands:
-        #     # these are individual send commands so don't need to be wrapped in a block
-        #     typing_text += 'Send("' + command + '{ENTER}")'
-        #     command_delay = str(random.randint(2000, 20000))
-        #     typing_text += 'sleep(" + command_delay + ")'
-
-        # for task_name, task_output in self.commands.items():
-        #     print(task_name, task_output)
-
-        # # add in exit
-        # typing_text += 'Send("exit{ENTER}")'
-        # typing_text += "\n; Reset Focus"
-        # typing_text += '\nSendKeepActive("")'
-
-
+            typing_text += "\n; ############################################\n"
+            typing_text += "; [!] Subtask >> " + str(key) + '\n'
+            typing_text += str(key) + "()\n"
         return textwrap.indent(typing_text, self.indent_space * 2)
 
 
@@ -419,7 +384,7 @@ class RemoteDesktop(BaseCMD):
 
             Send("{CAPSLOCK}")
             ; Need a short sleep here for focus to restore properly.
-	        Sleep(150)
+            Sleep(150)
             Send("{CAPSLOCK}")
             WinClose("[CLASS:TscShellContainerClass]")
             Sleep(50)
@@ -443,8 +408,6 @@ class RemoteDesktop(BaseCMD):
         typing_text = ''
 
         for key, value in self.csh.subtasks.items():
-            #print("The key is >> {}".format(key))
-        
             typing_text += ("\n; ############################################\n")
             typing_text += ("; [!] Assigned Subtask Interaction >> " + str(key) + '\n')
             typing_text += ("; [!] Parent : RemoteDesktop \n")

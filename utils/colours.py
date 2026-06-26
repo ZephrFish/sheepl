@@ -33,9 +33,6 @@ __license__ = "MIT"
 
 class ColourText(object):
 
-    # init empty variable
-    text2colour = ""
-
     def __init__(self, colour_output):
         self.colour_output = colour_output
         # create variables to hold colour values
@@ -47,7 +44,7 @@ class ColourText(object):
 
     def red(self,text2colour):
         # red colour
-        if self.colour_output == True:
+        if self.colour_output:
             redstart = "\033[" + self.red_colour
             redend = "\033[0m"
             return redstart + text2colour + redend
@@ -57,7 +54,7 @@ class ColourText(object):
 
     def green(self, text2colour):
         # green colour
-        if self.colour_output == True:
+        if self.colour_output:
             greenstart = "\033[" + self.green_colour
             greenend = "\033[0m"
             return greenstart + text2colour + greenend
@@ -67,7 +64,7 @@ class ColourText(object):
 
     def green_ul(self, text2colour):
         # green colour
-        if self.colour_output == True:
+        if self.colour_output:
             greenstart = "\033[" + self.green_colour_ul
             greenend = "\033[0m"
             return greenstart + text2colour + greenend
@@ -77,7 +74,7 @@ class ColourText(object):
 
     def yellow(self, text2colour):
         # yellow colour
-        if self.colour_output == True:
+        if self.colour_output:
             yellowstart = "\033[" + self.yellow_colour
             yellowend = "\033[0m"
             return yellowstart + text2colour + yellowend
@@ -87,7 +84,7 @@ class ColourText(object):
 
     def blue(self, text2colour):
         # blue color
-        if self.colour_output == True:
+        if self.colour_output:
             bluestart = "\033[" + self.blue_colour
             blueend = "\033[0m"
             return bluestart + text2colour + blueend

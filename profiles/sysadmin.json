@@ -1,0 +1,114 @@
+{
+  "sheepl": {
+    "name": "Atlas",
+    "total_time": "45m",
+    "typing_speed": 75,
+    "loop": "True",
+    "icon": "False",
+    "tasks": [
+      {
+        "task": "SchTasks",
+        "action": "create",
+        "task_name": "DailyBackup",
+        "task_command": "robocopy C:\\Data \\\\fileserver\\backup\\daily /MIR",
+        "schedule": "daily"
+      },
+      {
+        "task": "ServiceControl",
+        "action": "query",
+        "service_name": "wuauserv"
+      },
+      {
+        "task": "Reg",
+        "action": "query",
+        "key": "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion"
+      },
+      {
+        "task": "Regedit",
+        "nav_key": "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services",
+        "browse_time": 15
+      },
+      {
+        "task": "WmicQuery",
+        "query": "os get Caption,Version,BuildNumber,LastBootUpTime"
+      },
+      {
+        "task": "MpCmdRun",
+        "scan_type": "quick",
+        "update_sigs": true
+      },
+      {
+        "task": "Netsh",
+        "query": "firewall"
+      },
+      {
+        "task": "BitsAdmin",
+        "job_name": "WindowsUpdate"
+      },
+      {
+        "task": "Certutil",
+        "target_file": "C:\\Windows\\System32\\drivers\\etc\\hosts",
+        "query_store": false
+      },
+      {
+        "task": "CertReq",
+        "config_url": "http://ca.corp.internal/certsrv/mscep/mscep.dll",
+        "request_file": "C:\\Temp\\server01.req",
+        "output_file": "C:\\Temp\\server01.cer"
+      },
+      {
+        "task": "Wuauclt",
+        "update_server": "http://wsus.corp.internal:8530"
+      },
+      {
+        "task": "PrintBrm",
+        "operation": "backup",
+        "target_dir": "C:\\PrinterBackup",
+        "zip_file": "C:\\PrinterBackup\\printserver_backup.zip"
+      },
+      {
+        "task": "StorDiag",
+        "output_dir": "C:\\Logs\\StorageDiag"
+      },
+      {
+        "task": "SigVerif"
+      },
+      {
+        "task": "Query",
+        "subcommand": "session"
+      },
+      {
+        "task": "FltMc",
+        "filter_name": "bindflt"
+      },
+      {
+        "task": "At",
+        "schedule_time": "23:00",
+        "command": "C:\\Scripts\\nightly_maintenance.bat",
+        "recurring": true
+      },
+      {
+        "task": "Cmdkey",
+        "target": "fileserver.corp.internal",
+        "username": "svcbackup"
+      },
+      {
+        "task": "PktMon",
+        "action": "list"
+      },
+      {
+        "task": "OdbcConf",
+        "driver_name": "CorpSQLDriver",
+        "dsn_name": "CorpERP_DSN"
+      },
+      {
+        "task": "ConfigSecurityPolicy",
+        "policy_path": "C:\\GPO\\CorporateSecurityPolicy.inf"
+      },
+      {
+        "task": "Gpscript",
+        "script_phase": "startup"
+      }
+    ]
+  }
+}

@@ -19,13 +19,13 @@ __license__ = "MIT"
 
 
 import cmd
-import sys
 import random
 import textwrap
 
 
 # Sheepl Class Imports
 from utils.base.base_cmd_class import BaseCMD
+from utils.typing import TypeWriter
 
 
 class CommandShell(BaseCMD):
@@ -54,8 +54,7 @@ class CommandShell(BaseCMD):
 
 
         # Overrides Base Class Prompt Setup
-        if csh.creating_subtasks == True:
-            print("[^] creating subtasks >>>>>>>>")
+        if csh.creating_subtasks:
             self.baseprompt = cl.yellow('[>] Creating subtask\n{} > command >: '.format(csh.name.lower()))
         else:
             self.baseprompt = cl.yellow('{} > command >: '.format(csh.name.lower()))
@@ -65,6 +64,8 @@ class CommandShell(BaseCMD):
         self.commands = []
         # track subtasks
         self.subtask = False
+        # typing realism threshold: epic / good / average / poor (None = simple Send)
+        self.typing_threshold = None
         
         # creating my own
         self.introduction = """
@@ -107,7 +108,7 @@ class CommandShell(BaseCMD):
         """
         # Init tracking booleans
         # method from parent class BaseCMD
-        if self.check_task_started() == False:
+        if self.check_task_started():
             self.prompt = self.cl.blue("[*] Current Task : 'CommandShell_{}'".format(str(self.csh.counter.current())) + "\n" + self.baseprompt)
 
 
@@ -120,14 +121,12 @@ class CommandShell(BaseCMD):
         <> Example : ipconfig /all
         """
         if command:
-            if self.taskstarted == True:
+            if self.taskstarted:
                 print(" : " + command)
                 self.commands.append(command)
             else:
-                if self.taskstarted == False:
-                    print(self.cl.red("[!] <ERROR> You need to start a new CommandShell Interaction."))
-                    print(self.cl.red("[!] <ERROR> Start this with 'new' from the menu."))
-                print("[!] <ERROR> You need to supply the command for typing")
+                print(self.cl.red("[!] <ERROR> You need to start a new CommandShell Interaction."))
+                print(self.cl.red("[!] <ERROR> Start this with 'new' from the menu."))
 
 
     def do_command_file(self, input_file):
@@ -136,20 +135,31 @@ class CommandShell(BaseCMD):
         expect one per line
         """
         if input_file:
-            if self.taskstarted == True:
+            if self.taskstarted:
                 try:
                     with open(input_file) as command_file:
                         for command in command_file.readlines():
                             self.commands.append(command.rstrip('\n'))
 
-                except:
-                    print("[!] Error reading file : {}".format(self.cl.red(input_file)))
+                except OSError as e:
+                    print("[!] Error reading file : {} ({})".format(self.cl.red(input_file), e))
             else:
-                if self.taskstarted == False:
-                    print(self.cl.red("[!] <ERROR> You need to start a new CommandShell Interaction."))
-                    print(self.cl.red("[!] <ERROR> Start this with 'new' from the menu."))
-                print("[!] <ERROR> You need to supply the command for typing")
+                print(self.cl.red("[!] <ERROR> You need to start a new CommandShell Interaction."))
+                print(self.cl.red("[!] <ERROR> Start this with 'new' from the menu."))
 
+
+    def do_typing_threshold(self, threshold):
+        """
+        Set typing realism level: epic / good / average / poor
+        Default is off. Use 'none' to revert to simple Send().
+        example: typing_threshold average
+        """
+        valid = ['epic', 'good', 'average', 'poor', 'none']
+        if threshold.lower() in valid:
+            self.typing_threshold = None if threshold.lower() == 'none' else threshold.lower()
+            print(self.cl.green("[*] Typing threshold set to: {}".format(threshold.lower())))
+        else:
+            print(self.cl.red("[!] Invalid threshold. Choose from: {}".format(', '.join(valid))))
 
     def do_assigned(self, arg):
         """
@@ -251,16 +261,7 @@ class CommandShell(BaseCMD):
         ; < ----------------------------------- >
 
         """
-        # this is an important check as you cannot have nested functions in autoit
-        # so you need to check whether to include the command call or not
-        # if you are creating subtasks then this call gets pulled from the
-        # 'key' of the subtasks dictionary so cannot be included here
-        # which is the reason for this check
-        # in other words, all functions need to be declared without nesting
-        # it is about where you call the function that matters which in the case
-        # of subtasking, is from the parent
-
-        if self.csh.creating_subtasks == False:
+        if not self.csh.creating_subtasks:
             function_declaration += "CommandShell_{}()".format(self.csh.counter.current())
 
 
@@ -271,19 +272,6 @@ class CommandShell(BaseCMD):
     # Define AutoIT Function
 
     def open_commandshell(self):
-        """
-        Creates the AutoIT Function Declaration Entry
-        """
-
-        """
-        # Note a weird bug that the enter needs to be
-        # passed as format string argument as escaping
-        # is ignored on a multiline for some reason
-        # if it gets sent as an individual line as in text_typing_block()
-        # >> typing_text += "Send('exit{ENTER}')"
-        # everything works. Strange, Invoke-OCD, and then stop caring
-        # and push it through the format string.
-        """
 
         _open_commandshell = """
 
@@ -319,20 +307,18 @@ class CommandShell(BaseCMD):
         """
         Takes the Typing Text Input
         """
-
-        # Grabas the command list and goes through it
-        # This uses the textwrap.indent to add in the indentation
-
-
         typing_text = '\n'
 
-        for command in self.commands:
-            # these are individual send commands so don't need to be wrapped in a block
-            typing_text += ('Send("' + command + '{ENTER}")\n')
-            command_delay = str(random.randint(2000, 20000))
-            typing_text += ("sleep(" + command_delay + ")\n")
+        if self.typing_threshold:
+            tw = TypeWriter(threshold=self.typing_threshold)
+            for command in self.commands:
+                typing_text += tw.generate_command(command, indent='') + '\n'
+                typing_text += 'sleep({})\n'.format(random.randint(2000, 20000))
+        else:
+            for command in self.commands:
+                typing_text += 'Send("' + self._escape_send(command) + '{ENTER}")\n'
+                typing_text += 'sleep({})\n'.format(random.randint(2000, 20000))
 
-        # add in exit
         typing_text += "Send('exit{ENTER}')\n"
         typing_text += "; Reset Focus\n"
         typing_text += 'SendKeepActive("")'

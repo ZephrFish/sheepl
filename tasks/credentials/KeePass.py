@@ -18,12 +18,11 @@ __author__ = "Matt Lorentzen @lorentzenman"
 __license__ = "MIT"
 
 import cmd
-import sys
 import random
 import textwrap
 
 from utils.base.base_cmd_class import BaseCMD
-#from utils.typing import TypeWriter
+from utils.typing import TypeWriter
 
 
 class KeePass(BaseCMD):
@@ -51,16 +50,13 @@ class KeePass(BaseCMD):
         self.cl = cl
 
         #  Overrides Base Class Prompt Setup
-        if csh.creating_subtasks == True:
-            print("[^] creating subtasks >>>>>>>>")
+        if csh.creating_subtasks:
             self.baseprompt = cl.yellow('[>] Creating subtask\n{} > command >: '.format(csh.name.lower()))
         else:
             self.baseprompt = cl.yellow('{} > keepass >: '.format(csh.name.lower()))
 
         self.prompt = self.baseprompt
-         
-         # track subtasks
-        self.subtask = False  
+        self.subtask = False
 
         # creating my own
         self.introduction = """
@@ -100,7 +96,7 @@ class KeePass(BaseCMD):
 
     def do_new(self, arg):
         """
-        This command creates a new Word document
+        Start a new KeePass interaction
         """
         # Init tracking booleans
         # method from parent class BaseCMD
@@ -108,7 +104,7 @@ class KeePass(BaseCMD):
         # Booleans are set in parent method
 
         # method from parent class BaseCMD
-        if self.check_task_started() == False:
+        if self.check_task_started():
             print("[!] Starting : 'KeePass_{}'".format(str(self.csh.counter.current())))
             # OCD Line break
             print()
@@ -117,17 +113,15 @@ class KeePass(BaseCMD):
 
     def do_database_location(self, location):
         """
-        Specifies the keepass location > database_location c:\path.to.keepass.db
+        Specifies the keepass location > database_location c:\\path\\to\\keepass.db
         """
         if location:
-            if self.taskstarted == True:
+            if self.taskstarted:
                 print("[!] Database Location : {}".format(location))
                 self.database_location = location
             else:
-                if self.taskstarted == False:
-                    print(self.cl.red("[!] <ERROR> You need to start a new KeePass Interaction."))
-                    print(self.cl.red("[!] <ERROR> Start this with 'new' from the menu."))
-                print("[!] <ERROR> You need to supply the command for typing")
+                print(self.cl.red("[!] <ERROR> You need to start a new KeePass Interaction."))
+                print(self.cl.red("[!] <ERROR> Start this with 'new' from the menu."))
 
 
     def do_masterpassword(self, masterpassword):
@@ -135,16 +129,14 @@ class KeePass(BaseCMD):
         Specifies the keepass masterpassword credential
         """
         if masterpassword:
-            if self.taskstarted == True:
+            if self.taskstarted:
                 self.masterpassword = masterpassword
             else:
-                if self.taskstarted == False:
-                    print(self.cl.red("[!] <ERROR> You need to start a new KeePass Interaction."))
-                    print(self.cl.red("[!] <ERROR> Start this with 'new' from the menu."))
-                print("[!] <ERROR> You need to supply the command for typing")
+                print(self.cl.red("[!] <ERROR> You need to start a new KeePass Interaction."))
+                print(self.cl.red("[!] <ERROR> Start this with 'new' from the menu."))
 
 
-    def do_show(self):
+    def do_show(self, arg):
         """
         Shows the current configured credentials
         """
@@ -230,11 +222,11 @@ class KeePass(BaseCMD):
             self.masterpassword     = kwargs["masterpassword"]
  
             print(f"[*] Setting the command attribute : {self.database_location}")
-            print(f"[*] Setting the command attribute : {self.masterpassword}")
+            print(f"[*] Setting the command attribute : ****")
 
         
-        except:
-            print(self.cl.red("[!] Error Setting JSON Profile attributes, check matching key values in the profile"))
+        except KeyError as e:
+            print(self.cl.red("[!] Error Setting JSON Profile attributes, missing key: {}".format(e)))
 
         # once these have all been set in here, then self.create_autoIT_block() gets called which pushes the task on the stack
         self.create_autoIT_block()
@@ -256,9 +248,9 @@ class KeePass(BaseCMD):
         ;         KeePass Interaction
         ; < --------------------------------- >
 
-        KeePass_{}()
-
-        """.format(str(self.csh.counter.current()))
+        """
+        if not self.csh.creating_subtasks:
+            function_declaration += "KeePass_{}()".format(str(self.csh.counter.current()))
 
         return textwrap.dedent(function_declaration)
 
@@ -266,19 +258,6 @@ class KeePass(BaseCMD):
     def open_keepass(self):
         """
         Creates the AutoIT Function Declaration Entry
-        """
-
-        """
-        # Note a weird bug that the enter needs to be
-        # passed as format string argument as escaping
-        # is ignored on a multiline for some reason
-        # if it gets sent as an individual line as in text_typing_block()
-        # >> typing_text += "Send('exit{ENTER}')"
-        # everything works. Strange, Invoke-OCD, and then stop caring
-        # and push it through the format string.
-
-        # Note > Send('yourprogram{ENTER}')
-        # Example : Send('powershell{ENTER}')
         """
 
         _open_keepass = """
@@ -290,8 +269,7 @@ class KeePass(BaseCMD):
             Send("#r")
             ; Wait 10 seconds for the Run dialogue window to appear.
             WinWaitActive("Run", "", 10)
-            ; note this needs to be escaped
-            ; Sends path to Keepdatabase on local box
+            ; Sends path to KeePass database on local box
             Send('{}{}')
             ; check to see if we are already in an RDP session
             $active_window = _WinAPI_GetClassName(WinGetHandle("[ACTIVE]"))
@@ -307,20 +285,14 @@ class KeePass(BaseCMD):
             SendKeepActive('Open Database')
 
         """.format(str(self.csh.counter.current()),
-		                self.database_location,
-                        "{ENTER}",
-		                self.masterpassword
-		                )
+                   self._escape_send(self.database_location),
+                   "{ENTER}")
 
         return textwrap.dedent(_open_keepass)
 
 
     def text_typing_block(self):
-        """
-        Takes the Typing Text Input
-        """
-	    # open the database using the masterpassword
-        typing_text = 'Send({})\n'.format(self.masterpassword)
+        typing_text = 'Send("{}")\n'.format(self._escape_send(self.masterpassword))
 
         # add in exit - this is achieved using CTRL + q
         typing_text += 'Sleep(15677)\n'

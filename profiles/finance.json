@@ -1,0 +1,82 @@
+{
+  "sheepl" :
+  {
+    "name": "Ledger",
+    "total_time": "30m",
+    "typing_speed": 55,
+    "loop": "True",
+    "icon": "False",
+    "tasks": [
+      {
+        "task"            : "Edge",
+        "destination_url" : "https://intranet.corp.internal/finance"
+      },
+      {
+        "task"    : "Outlook",
+        "to"      : "accounts@corp.internal",
+        "subject" : "Q3 Expense Reconciliation",
+        "body"    : [
+          "Hi team,",
+          "Please find attached the Q3 expense reconciliation spreadsheet.",
+          "All figures have been cross-checked against the ledger.",
+          "Deadline for sign-off is end of week.",
+          "Regards"
+        ]
+      },
+      {
+        "task" : "Excel",
+        "data" : [
+          ["Cost Centre", "Budget", "Actual", "Variance", "Variance %"],
+          ["Operations", "250000", "237400", "12600", "5.04"],
+          ["Marketing", "180000", "192300", "-12300", "-6.83"],
+          ["IT", "320000", "309800", "10200", "3.19"],
+          ["HR", "95000", "91200", "3800", "4.00"],
+          ["Finance", "110000", "108750", "1250", "1.14"]
+        ]
+      },
+      {
+        "task"     : "Teams",
+        "channel"  : "Finance",
+        "messages" : [
+          "Monthly close is on track - all journals posted by COB today",
+          "Can everyone double-check their accruals before the 3pm deadline"
+        ]
+      },
+      {
+        "task"       : "WordDocument",
+        "input_file" : "content/if.txt",
+        "save_name"  : "C:\\Users\\Finance\\Documents\\Q3_FinancialSummary.docx"
+      },
+      {
+        "task"           : "ProblemStepsRecorder",
+        "output"         : "C:\\Users\\Finance\\Desktop\\expense_portal_issue.zip",
+        "screenshots"    : true,
+        "max_screenshots": 20,
+        "record_time"    : 45
+      },
+      {
+        "task"       : "HelpFile",
+        "chm_path"   : "C:\\Windows\\Help\\Windows.chm",
+        "browse_time": 10
+      },
+      {
+        "task"   : "MsAccess",
+        "db_url" : "\\\\fileserver\\finance\\data\\FinanceDB.mdb"
+      },
+      {
+        "task"       : "Mspub",
+        "remote_url" : "http://intranet.corp.internal/finance/templates/quarterly_newsletter.pub"
+      },
+      {
+        "task"                 : "PowerPnt",
+        "presentation_path"   : "C:\\Users\\Finance\\Documents\\Q3_BoardPresentation.pptx"
+      },
+      {
+        "task"    : "Msiexec",
+        "action"  : "query",
+        "package" : "Adobe Acrobat",
+        "passive" : true
+      }
+    ]
+  }
+}

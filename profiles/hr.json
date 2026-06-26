@@ -1,0 +1,75 @@
+{
+  "sheepl" :
+  {
+    "name": "Arbor",
+    "total_time": "30m",
+    "typing_speed": 58,
+    "loop": "True",
+    "icon": "False",
+    "tasks": [
+      {
+        "task"            : "Edge",
+        "destination_url" : "https://hris.corp.internal/portal"
+      },
+      {
+        "task"    : "Outlook",
+        "to"      : "all-staff@corp.internal",
+        "subject" : "Reminder: Annual Performance Review Submissions Due Friday",
+        "body"    : [
+          "Dear All,",
+          "This is a reminder that all performance review forms must be submitted by Friday 5pm.",
+          "Please log into the HR portal at https://hris.corp.internal to complete your self-assessment.",
+          "Contact HR if you have any questions.",
+          "HR Team"
+        ]
+      },
+      {
+        "task" : "Excel",
+        "data" : [
+          ["Employee ID", "Name", "Department", "Start Date", "Status", "Review Due"],
+          ["EMP001", "James Hartley", "Engineering", "2021-03-15", "Active", "2026-07-01"],
+          ["EMP002", "Sarah Nguyen", "Marketing", "2019-08-22", "Active", "2026-07-01"],
+          ["EMP003", "Daniel Osei", "Sales", "2022-11-07", "Active", "2026-07-01"],
+          ["EMP004", "Laura Becker", "Finance", "2020-05-30", "On Leave", "2026-07-15"]
+        ]
+      },
+      {
+        "task"     : "Teams",
+        "channel"  : "HR-Team",
+        "messages" : [
+          "New starter onboarding pack for next Monday has been emailed to the hiring manager",
+          "Reminder to everyone - mandatory compliance training closes this Friday"
+        ]
+      },
+      {
+        "task"       : "WordDocument",
+        "input_file" : "content/if.txt",
+        "save_name"  : "C:\\Users\\HR\\Documents\\Disciplinary_Policy_v4.docx"
+      },
+      {
+        "task"   : "MsAccess",
+        "db_url" : "\\\\fileserver\\hr\\data\\EmployeeRecords.mdb"
+      },
+      {
+        "task"           : "ProblemStepsRecorder",
+        "output"         : "C:\\Users\\HR\\Desktop\\hris_portal_bug.zip",
+        "screenshots"    : true,
+        "max_screenshots": 15,
+        "record_time"    : 30
+      },
+      {
+        "task"       : "HelpFile",
+        "chm_path"   : "C:\\Windows\\Help\\Windows.chm",
+        "browse_time": 10
+      },
+      {
+        "task"       : "Mspub",
+        "remote_url" : "http://intranet.corp.internal/hr/templates/benefits_brochure.pub"
+      },
+      {
+        "task"               : "PowerPnt",
+        "presentation_path"  : "C:\\Users\\HR\\Documents\\NewStarter_Induction_Deck.pptx"
+      }
+    ]
+  }
+}

@@ -1,15 +1,5 @@
 """
- The base Sheepl Object Class
-
- Notes:
-    The textwrap import is used to keep the AutoIT functions indented in code
-    as this messes with the python code (back off OCD) when it's manually
-    appearing to hang outside of the class declarations and also stops code collapse in IDEs.
-    So when creating code specific to the AutoIT functions just use tabs to indent insitu
-    and the textwarp library will strip all leading tabs from the beginning of the AutoIT block.
-    Also uses textwrap.indent() to add indentation to commands or statements that should be
-    inline from the initial function declaration
-
+The base Sheepl object. Holds state, task list, and file generation for one simulated user.
 """
 
 __author__ = "Matt Lorentzen @lorentzenman"
@@ -20,23 +10,11 @@ import random
 import textwrap
 import importlib
 
-# Sheepl Class Imports
 from utils.tasks import Tasks
 from utils.counter import Counter
 
-#######################################################################
-#   Sheepl Class
-#######################################################################
 
 class Sheepl(object):
-    """
-    Creates a digital person and is ready to type the commands
-    """
-    # this is the core Tasks dictionary
-    # DEBUG >> check to see if this can be moved into INIT
-    #tasks = {}
-    #headers = .action_headers()
-
 
     def __init__(self, name, total_time, type_speed, loop, cl, interactive):
 
@@ -44,63 +22,32 @@ class Sheepl(object):
         self.total_time = total_time
         self.loop = loop
         self.cl = cl
-        # interactive switch
         self.interactive = interactive
-        # boolean for JSON profile input
         self.json_parsing = False
         
-        # needs to be a string for JSON
         self.icon = "True"
         self.birth = False
-
-        # First create task Object
         self.available_tasks = Tasks()
-
-        # Calls the Task object to return all the available lists
-        #self.task_list = dict(self.available_tasks.locate_available_tasks().items())
         self.task_list = self.update_available_tasks()
-
-        # empty task dictionary to hold assigned tasks
         self.tasks = {}
-
-        # boolean to track subtask status and calling parent class
         self.creating_subtasks = False
         self.parent_task = ''
-        
-        # empty subtask dictionary to hold assigned tasks
         self.subtasks = {}
-
-        # empty list to hold window kill list
         self.window_kill_list = []
-
-        # set profile file path to an empty string
         self.profile_path = ''
-
-        # Start counter instance that maps to tasks
         self.counter = Counter()
-
-        # File setup
         self.output_base = "output/"
-        self.file_name = name.replace(' ', '_')
-        self.file_name = name.lower() + '.au3'
-        self.file_name = self.output_base + self.file_name
+        self.file_name = self.output_base + name.lower().replace(' ', '_') + '.au3'
 
         print("[>] Creating the file : {}".format(self.cl.red(self.file_name)))
         self.typing_speed = self._typing_speed(type_speed)
-
-        # Whether the task list loops or runs once
         print("[>] Looping set to : {}".format(self.cl.red(str(self.loop))))
-
-        # Display JSON Parsling
         print("[>] JSON Parsing : {}".format(self.cl.red(str(self.json_parsing))))
 
-        # AutoIT Include Header List
         self.autoIT_include_statement = ''
         self.autoIT_UDF_includes = ['#include <Array.au3>', '#include <WinAPI.au3>']
 
-        # OCD lines
         print()
-        # say hello
         self.say_hello()
         print()
 
@@ -196,9 +143,8 @@ class Sheepl(object):
         Add a task to the dictionary
         """
         # checks to see whether we are subtasking
-        if self.creating_subtasks == False:
+        if not self.creating_subtasks:
             self.tasks[task] = output
-            #print(self.tasks)
         else:
             self.subtasks[task] = output
         # increment the counter value
@@ -241,17 +187,19 @@ class Sheepl(object):
         moar random to add to your random
         """
 
+        task_names_str = '["' + '", "'.join(task_names) + '"]'
         task_list_output = """\
         ; define global task list
-        Global $aTasks[{}] = {} """.format(total_tasks, ([t for t in task_names]))
+        Global $aTasks[{}] = {} """.format(total_tasks, task_names_str)
 
+        sleep_times_str = '[' + ', '.join(str(s) for s in sleep_time_list) + ']'
         sleep_time_output = """\
 
         ; creates Sleep Times array
         Global $aSleepTimes[{}] = {}
         ; copies original array just encase the task list borks
         $aRandTasks = $aTasks
-        """.format(sleep_list_length, ([str(s) for s in sleep_time_list]))
+        """.format(sleep_list_length, sleep_times_str)
 
         return textwrap.dedent(task_list_output), textwrap.dedent(sleep_time_output)
 
@@ -265,7 +213,10 @@ class Sheepl(object):
         """
         # sort out the array for the list
         # print("Global $winKillList[" + str(len(windows_to_watch)) + "] = " + str(windows_to_watch))
-        window_list = "Global $winKillList[" + str(len(self.window_kill_list)) + "] = " + str(self.window_kill_list) + "\n"
+        window_list = 'Global $winKillList[{}] = [{}]\n'.format(
+            len(self.window_kill_list),
+            ', '.join('"' + w + '"' for w in self.window_kill_list)
+        )
 
         window_func_declaration = """
         ; < ------------------------------------ >
@@ -311,8 +262,8 @@ class Sheepl(object):
         Add in headers based on dictionary object
         Takes in the autoIT_include_statement
         """
-        if not self.autoIT_include_statement in self.autoIT_UDF_includes:
-            self.autoIT_UDF_includes.append(self.autoIT_include_statement)
+        if not autoIT_include_statement in self.autoIT_UDF_includes:
+            self.autoIT_UDF_includes.append(autoIT_include_statement)
 
 
     def parse_time_values(self, total_time):
@@ -321,17 +272,17 @@ class Sheepl(object):
         milliseconds and seconds as needed
         """
         # sorts out time into milliseconds
-        if 'm' in self.total_time:
-            total_time = int(self.total_time.split('m')[0]) * (1000 * 60)
-        elif 'h' in self.total_time:
-            total_time = int(self.total_time.split('h')[0]) * (1000 * 60 * 60)
+        if 'm' in total_time:
+            total_time = int(total_time.split('m')[0]) * (1000 * 60)
+        elif 'h' in total_time:
+            total_time = int(total_time.split('h')[0]) * (1000 * 60 * 60)
+        elif 'd' in total_time:
+            total_time = int(total_time.split('d')[0]) * (1000 * 60 * 60 * 24)
         else:
             # 1000 milliseconds to 1minute -> then to 1hour
             total_time = (1000 * 60 * 60)
 
         total_tasks = len(self.tasks.keys())
-        print(self.cl.red("TOTAL TASKS ARE {}".format(total_tasks)))
-        print(self.cl.red("TOTAL TIME IS {}".format(str(total_time))))
 
         # https://stackoverflow.com/questions/3589214/generate-multiple-random-numbers-to-equal-a-value-in-python
 
@@ -433,7 +384,6 @@ class Sheepl(object):
         print("[>] Writing to file {}".format(self.cl.red(self.file_name)))
 
         sleep_time_list = self.parse_time_values(self.total_time)
-        print("SLEEP TIMES ARE {}".format(sleep_time_list))
 
         # creates the file write
 

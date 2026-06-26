@@ -18,7 +18,6 @@ __author__ = "Matt Lorentzen"
 __license__ = "MIT"
 
 import cmd
-import sys
 import random
 import textwrap
 
@@ -52,17 +51,13 @@ class RunCommand(BaseCMD):
         # current colour object
         self.cl = cl
        
-        #  Overrides Base Class Prompt Setup
-        if csh.creating_subtasks == True:
-            print("[^] creating subtasks >>>>>>>>")
+        if csh.creating_subtasks:
             self.baseprompt = cl.yellow('[>] Creating subtask\n{} > command >: '.format(csh.name.lower()))
         else:
             self.baseprompt = cl.yellow('{} > runcommand >: '.format(csh.name.lower()))
 
         self.prompt = self.baseprompt
-         
-         # track subtasks
-        self.subtask = False  
+        self.subtask = False
 
         # creating my own
         self.introduction = """
@@ -100,15 +95,9 @@ class RunCommand(BaseCMD):
 
     def do_new(self, arg):
         """
-        This command creates a new Word document
+        Start a new RunCommand interaction
         """
-        # Init tracking booleans
-        # method from parent class BaseCMD
-        # Inverse check to see if task has already started
-        # Booleans are set in parent method
-
-        # method from parent class BaseCMD
-        if self.check_task_started() == False:
+        if self.check_task_started():
             print("[!] Starting : 'RunCommand_{}'".format(str(self.csh.counter.current())))
             # OCD Line break
             print()
@@ -121,13 +110,11 @@ class RunCommand(BaseCMD):
         """
 
         if command:
-            if self.taskstarted == True:
+            if self.taskstarted:
                 self.command = command
             else:
-                if self.taskstarted == False:
-                    print(self.cl.red("[!] <ERROR> You need to start a new RunCommand Interaction."))
-                    print(self.cl.red("[!] <ERROR> Start this with 'new' from the menu."))
-                print("[!] <ERROR> You need to supply the command for typing")
+                print(self.cl.red("[!] <ERROR> You need to start a new RunCommand Interaction."))
+                print(self.cl.red("[!] <ERROR> Start this with 'new' from the menu."))
 
 
     def do_assigned(self, arg):
@@ -198,11 +185,8 @@ class RunCommand(BaseCMD):
         # what should be set in the kwargs parsing. 
         print(f"[-] The following keys are needed for this task : {[x for x in list(kwargs.keys())[1:]]}")
         self.command = kwargs["cmd"][0]
-        # if multiple commands are sent then the raise an error and show that the RunCommands only take the latest
-        # parse the list and grab the first one
-        if len(self.command) > 1:
-            print(self.cl.red("[!] Multiple run entries are detected - for now I will take the first one"))
-            self.command = kwargs["cmd"][0]
+        if len(kwargs["cmd"]) > 1:
+            print(self.cl.red("[!] Multiple run entries are detected - only the first one will be used"))
         print(f"[*] Setting the command attribute : {self.command}")
 
         # once these have all been set in here, then self.create_autoIT_block() gets called which pushes the task on the stack
@@ -225,29 +209,13 @@ class RunCommand(BaseCMD):
         ; < ------------------------------------ >
 
         """
-        if self.csh.creating_subtasks == False:
+        if not self.csh.creating_subtasks:
             function_declaration += "RunCommand_{}()".format(str(self.csh.counter.current()))
 
         return textwrap.dedent(function_declaration)
 
 
     def open_RunCommand(self):
-        """
-        Creates the AutoIT Function Declaration Entry
-        """
-
-        """
-        # Note a weird bug that the enter needs to be
-        # passed as format string argument as escaping
-        # is ignored on a multiline for some reason
-        # if it gets sent as an individual line as in text_typing_block()
-        # >> typing_text += "Send('exit{ENTER}')"
-        # everything works. Strange, Invoke-OCD, and then stop caring
-        # and push it through the format string.
-
-        # Note > Send('yourprogram{ENTER}')
-        # Example : Send('powershell{ENTER}')
-        """
 
         _open_runcommand = """
 
@@ -276,7 +244,8 @@ class RunCommand(BaseCMD):
         """
 
         end_func = """
-	    WinClose("Run")
+
+        WinClose("Run")
         EndFunc
 
         """
